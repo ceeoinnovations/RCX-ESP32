@@ -319,6 +319,40 @@ async def flash_code(event):
         log_to_ui(f"Error: {e}")
 
 
+# ── Channel → BLE bridge ─────────────────────────────────────────────────────
+
+TOPIC_TO_CMD = {
+    '/rcx/move_fwd':    0x10,
+    '/rcx/move_bwd':    0x11,
+    '/rcx/turn_left':   0x12,
+    '/rcx/turn_right':  0x13,
+    '/rcx/spin_left':   0x14,
+    '/rcx/spin_right':  0x15,
+    '/rcx/stop':        0x16,
+    '/rcx/brake':       0x17,
+    '/rcx/beep':        0x20,
+    '/rcx/motor_on':    0x30,
+    '/rcx/motor_off':   0x31,
+    '/rcx/motor_brake': 0x32,
+    '/rcx/motor_power': 0x33,
+    '/rcx/all_off':     0x34,
+    '/rcx/all_brake':   0x35,
+}
+
+async def channel_to_ble(message):
+    topic, value = core.myChannel.check('/rcx', message)
+    if not topic:
+        return
+    cmd = TOPIC_TO_CMD.get(topic)
+    if cmd is None:
+        core.log_to_ui(f'Unknown RCX topic: {topic}')
+        return
+    core.log_to_ui(f'Channel → BLE: {topic} ({hex(cmd)})')
+    window.bleSend(cmd)
+
+core.myChannel.callback = channel_to_ble
+
+
 # ── USB Tower ───────────────────────────────────────────────────────────────
 
 _tower = usb_tower_driver.rcx

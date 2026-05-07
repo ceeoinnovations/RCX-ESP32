@@ -1,8 +1,8 @@
-import asyncio
 from pyscript import document, window
 from js import Uint8Array
 import json
 import RS232
+import channel
 import control_panel
 
 
@@ -10,6 +10,24 @@ import control_panel
 toggle_bit = False
 myRS232 = RS232.CEEO_RS232(divName='all_things_rs232',
                            suffix='1', myCSS=False, default_code='sd')
+
+myChannel = channel.CEEO_Channel("hackathon", "@chrisrogers", "talking-on-a-channel",
+                                 divName='all_things_channels', suffix='_test')
+myChannel.topic.value = '/chris'
+
+
+def channel_callback(message):
+    try:
+        if message['type'] == 'data' and 'payload' in message:
+            import json as _json
+            topic = _json.loads(message['payload'])['topic']
+            value = _json.loads(message['payload'])['value']
+            if topic == '/code':
+                document.getElementById('codeArea').code = value
+    except:
+        pass
+
+myChannel.callback = channel_callback
 
 
 def log_to_ui(message):

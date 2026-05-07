@@ -75,13 +75,24 @@ body {
     padding: 16px;
 }
 
+.left-column {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
 /* ── Panels ────────────────────────────────────────────────────────────── */
 .rs232-area,
+.channel-area,
 .control-panel {
     background: var(--panel);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 12px;
+}
+
+.channel-area {
+    font-size: 0.9rem;
 }
 
 .control-panel {
@@ -537,6 +548,9 @@ textarea {
 @media (max-width: 768px) {
     .container {
         grid-template-columns: 1fr;
+    }
+    .left-column {
+        gap: 10px;
     }
 
     #repl-terminal {

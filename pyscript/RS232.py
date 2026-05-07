@@ -99,6 +99,7 @@ RS232HTML = '''
                 <button id="run_main{num}" class = 'button'>run as main.py</button>
                 <button id="upload{num}"   class = 'button'>upload code</button>
                 <button id="install_lib{num}" class = 'button'>Install RCX Lib</button>
+                <button id="load_te{num}" class = 'button'>Load TE Files</button>
                 <button id="download_main{num}" class = 'button'>download main.py</button>
                 <button id="reset{num}"    class = 'button'>reset board</button>
 
@@ -289,6 +290,9 @@ class CEEO_RS232():
 
         self.install_btn = document.getElementById(f'install_lib{self.suffix}')
         self.install_btn.onclick = self.on_install_library
+
+        self.load_te_btn = document.getElementById(f'load_te{self.suffix}')
+        self.load_te_btn.onclick = self.on_load_te_files
 
         self.python.code = default_code
         self.python.handleEvent = self.handle_board
@@ -496,3 +500,50 @@ class CEEO_RS232():
             window.alert(f"Installation failed: {e}")
         finally:
             self.install_btn.innerText = "Install RCX Lib"
+
+    async def on_load_te_files(self, event):
+        if not self.uboard.connected:
+            window.alert("Please connect to the ESP32 first.")
+            return
+
+        from pyscript import fetch
+
+        self.load_te_btn.innerText = "⏳ Loading…"
+        self.load_te_btn.disabled = True
+
+        try:
+            local_files = [
+                ("tech_element/definitions.py",  "definitions.py"),
+                ("tech_element/TE_BLE.py",        "TE_BLE.py"),
+                ("tech_element/Microwebsocket.py", "Microwebsocket.py"),
+            ]
+            installed = []
+            for local_path, board_name in local_files:
+                with open(local_path) as f:
+                    code = f.read()
+                success = await self.uboard.board.upload(board_name, code)
+                if success:
+                    installed.append(board_name)
+                else:
+                    window.alert(f"Failed to upload {board_name}")
+                    return
+
+            # Fetch pyConst.py from remote
+            resp = await fetch("https://chrisrogers.pyscriptapps.com/talking-to-a-hub/latest/py/pyConst.py")
+            if resp.ok:
+                pyconst = await resp.text()
+                success = await self.uboard.board.upload("pyConst.py", pyconst)
+                if success:
+                    installed.append("pyConst.py")
+
+            # Load main_code.py into editor
+            with open("tech_element/main_code.py") as f:
+                self.python.code = f.read()
+
+            window.alert(f"Uploaded {len(installed)} files: {', '.join(installed)}\nmain_code.py loaded into editor.")
+            await self.re_list(None)
+        except Exception as e:
+            window.alert(f"Load TE files failed: {e}")
+        finally:
+            self.load_te_btn.innerText = "Load TE Files"
+            self.load_te_btn.disabled = False

@@ -31,15 +31,20 @@
         </header>
 
         <div class="container">
-            <div class="rs232-area">
-                <script
-                    type="mpy-editor"
-                    src="./pyscript/main.py"
-                    config="./pyscript.toml"
-                    env="su25"
-                    setup
-                ></script>
-                <div id="all_things_rs232"></div>
+            <div class="left-column">
+                <div class="channel-area">
+                    <div id="all_things_channels"></div>
+                </div>
+                <div class="rs232-area">
+                    <script
+                        type="mpy-editor"
+                        src="./pyscript/main.py"
+                        config="./pyscript.toml"
+                        env="su25"
+                        setup
+                    ></script>
+                    <div id="all_things_rs232"></div>
+                </div>
             </div>
 
             <div class="control-panel">
@@ -83,6 +88,41 @@
                         <button id="btn-load-template" style="width:100%; padding:7px; background:var(--glass); border:1px solid var(--border); border-radius:5px; cursor:pointer; font-weight:600; font-size:12px;">
                             Load Template
                         </button>
+                    </div>
+
+                    <!-- BLE Control -->
+                    <div style="margin-top:16px; border-top:1px solid var(--border); padding-top:12px;">
+                        <h4 style="margin:0 0 8px 0; font-size:0.95rem;">BLE Control</h4>
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                            <button id="ble-connect-btn" onclick="bleConnect()" style="padding:7px 14px; background:#3b82f6; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px;">Connect</button>
+                            <button id="ble-disconnect-btn" onclick="bleDisconnect()" style="padding:7px 14px; background:#ef4444; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px; display:none;">Disconnect</button>
+                            <span id="ble-status" style="font-size:12px; color:#e74c3c; font-weight:600;">Not Connected</span>
+                        </div>
+                        <div style="display:flex; gap:6px;">
+                            <select id="ble-cmd-select" style="flex:1; padding:6px; border-radius:6px; border:1px solid var(--border); font-size:12px; background:white;">
+                                <optgroup label="Motion">
+                                    <option value="0x10">Move Forward</option>
+                                    <option value="0x11">Move Backward</option>
+                                    <option value="0x12">Turn Left</option>
+                                    <option value="0x13">Turn Right</option>
+                                    <option value="0x14">Spin Left</option>
+                                    <option value="0x15">Spin Right</option>
+                                    <option value="0x16">Stop</option>
+                                    <option value="0x17">Brake</option>
+                                </optgroup>
+                                <optgroup label="Sound">
+                                    <option value="0x20">Beep</option>
+                                </optgroup>
+                                <optgroup label="Motors">
+                                    <option value="0x30">Motor On</option>
+                                    <option value="0x31">Motor Off</option>
+                                    <option value="0x32">Motor Brake</option>
+                                    <option value="0x34">All Off</option>
+                                    <option value="0x35">All Brake</option>
+                                </optgroup>
+                            </select>
+                            <button onclick="bleSend(parseInt(document.getElementById('ble-cmd-select').value, 16))" style="padding:7px 14px; background:#3b82f6; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:600; font-size:12px;">Send</button>
+                        </div>
                     </div>
                 </div>
 
@@ -300,6 +340,46 @@
         document.getElementById('commands-modal').addEventListener('click', function(e) {
             if (e.target === this) this.style.display = 'none';
         });
+    </script>
+    <script type="module">
+        import { BLEDevice } from './ble_device.js';
+
+        const ble = new BLEDevice();
+
+        function setStatus(msg, ok) {
+            document.getElementById('ble-status').innerText = msg;
+            document.getElementById('ble-status').style.color = ok ? '#10b981' : '#e74c3c';
+            document.getElementById('ble-connect-btn').style.display = ok ? 'none' : '';
+            document.getElementById('ble-disconnect-btn').style.display = ok ? '' : 'none';
+        }
+
+        window.bleDisconnect = function () {
+            ble.disconnect();
+            setStatus('Not Connected', false);
+        };
+
+        window.bleConnect = async function () {
+            try {
+                setStatus('Scanning…', false);
+                await ble.scan();
+                setStatus('Connecting…', false);
+                ble.device.addEventListener('gattserverdisconnected', () => {
+                    setStatus('Not Connected', false);
+                });
+                await ble.connect((uuid, data) => {
+                    console.log('BLE notify:', data);
+                });
+                setStatus('Connected', true);
+            } catch (e) {
+                setStatus('Not Connected', false);
+                console.error('BLE error:', e);
+            }
+        };
+
+        window.bleSend = async function (byte) {
+            if (!ble.writeCharacteristic) { alert('Connect to BLE first'); return; }
+            await ble.send([byte]);
+        };
     </script>
     </body>
 </html>

@@ -6,6 +6,11 @@ name = "RoboLab"
 "./pyscript/control_panel.py" = "control_panel.py"
 "./pyscript/RS232.py" = "RS232.py"
 "./pyscript/usb_tower_driver.py" = "usb_tower_driver.py"
+"./pyscript/channel.py" = "channel.py"
+"./esp32/tech_element/definitions.py" = "tech_element/definitions.py"
+"./esp32/tech_element/TE_BLE.py" = "tech_element/TE_BLE.py"
+"./esp32/tech_element/Microwebsocket.py" = "tech_element/Microwebsocket.py"
+"./esp32/tech_element/main_code.py" = "tech_element/main_code.py"
 
 [js_modules.main]
 "https://cdn.jsdelivr.net/npm/micro-repl@0.8.2/serial.js" = "micro_repl"
