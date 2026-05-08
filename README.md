@@ -21,7 +21,8 @@ Live site: https://ceeoinnovations.github.io/RCX-ESP32/
 ## Wiring the IR LED
 
 The ESP32 drives an IR LED through an NPN transistor so it has enough current to
-reach the RCX.
+reach the RCX. A PCB can be used based on the files in `docs/KiCad`, or you can
+wire it up on a breadboard.
 
 ```
 ESP32 GPIO 2 ──── 330Ω ──── Base (PN2222A)
