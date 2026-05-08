@@ -84,3 +84,11 @@ browser over BLE and sending them to the RCX over IR.
 3. In the right panel, click **Connect** under BLE Control
 4. Select the device named **Maria** from the browser's Bluetooth picker
 5. Use the command dropdown to send commands to the RCX over BLE
+
+---
+
+## Future Work
+
+- Add more Python support for the LASM opcodes
+- Add support for LASM compiled bytecode (currently only raw opcodes)
+- Add program download to RCX (currently only live commands)
